@@ -283,5 +283,5 @@ def post_result():
     print(x)
     print("DONE")
     return True
-# solve()
-# post_result()
+solve()
+post_result()
