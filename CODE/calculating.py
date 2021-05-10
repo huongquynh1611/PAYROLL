@@ -11,7 +11,7 @@ from date_to_str import date_to_str
 rate1 = create_rate()[0] # full time
 rate2 = create_rate()[1] # part time
 rate3 = create_rate()[2] # casual
-xls = pd.ExcelFile("D:\Quynh\PAYROLL\Costing Examples_NEW.xlsx")
+xls = pd.ExcelFile("D:\Quynh\PAYROLL\Input file\Costing Examples_NEW.xlsx")
 time_df = pd.read_excel(xls, 'Time')
 holiday_df = xls.parse("Holiday")
 list = {"Monday":0,"Tuesday":1,"Wednesday":2,'Thursday':3,"Friday":4,"Saturday":5,"Sunday":6}
