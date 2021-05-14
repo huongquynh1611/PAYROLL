@@ -1,30 +1,16 @@
+from cal_base_rate import cal_base_rate
+from prepare import date_to_str
+import datetime
+from datetime import timedelta
+from cal_base_rate import rate_data
+from pandas import DataFrame
+from datetime import datetime
+from data_input import get_holiday
+import pandas as pd
 
-def day_val(day):
-    val = {"Monday":0,"Tuesday":1,"Wednesday":2,'Thursday':3,"Friday":4,"Saturday":5,"Sunday":6}
-    return val[day]
-def get_data(path):
-    import os
-    import datetime
-    from datetime import timedelta
-    import time
-    import pandas as pd
-    import numpy as np
-    from pandas import DataFrame
-    from datetime import datetime
-    from cal_base_rate import cal_base_rate
-    xls = pd.ExcelFile(path)
-    time_df = pd.read_excel(xls, 'Check')
+holiday_list = get_holiday()
 
-    holiday_df = xls.parse("Holiday")
-    holiday_list = [("" if m>9 else "0") + str(m) + "/" + ("" if d>9 else "0") + str(d) for d, m in zip(holiday_df["Day"], holiday_df["Month"])]
-
-    base_rate = 20
-    holiday_rate = 2.5
-
-    rate1 = np.array([[1,1.15,1.25,1.5,2],[1,1.15,1.25,1.5,2],[1,1.15,1.25,1.5,2],[1,1.15,1.25,1.5,2],[1,1.15,1.25,1.5,2],[1.5,1.5,1.5,1.5,2],[2,2,2,2,2]])
-    rate2 = np.array([[1,1.15,1.25,1.5,2],[1,1.15,1.25,1.5,2],[1,1.15,1.25,1.5,2],[1,1.15,1.25,1.5,2],[1,1.15,1.25,1.5,2],[1.5,1.5,1.5,1.5,2],[2,2,2,2,2]])
-    rate3 = np.array([[1.2,1.35,1.45,1.7,2.2],[1.2,1.35,1.45,1.7,2.2],[1.2,1.35,1.45,1.7,2.2],[1.2,1.35,1.45,1.7,2.2],[1.2,1.35,1.45,1.7,2.2],[1.7,1.7,1.7,1.7,2.2],[2.2,2.2,2.2,2.2,2.2]])   
-    rate_data = {"Full Time": rate1, "Part Time": rate2, "Casual": rate3}
+def get_data(time_df):
     data= []
     list_pay = []
     for row in time_df.iterrows():    
@@ -79,8 +65,8 @@ def get_data(path):
             
             
             
-            data.append((_id,start_period,start_date1,start1, end1, start_time, 24 ,start_day1, delta_time1, rate1,ot1_rate1,ot2_rate1))
-            data.append((_id,start_period,start_date2, start2, end2,  0, end_time, start_day2,delta_time2, rate2,ot1_rate2,ot2_rate2))  
+            data.append((_id,start_period,start_date1,start1, end1,  delta_time1, rate1,ot1_rate1,ot2_rate1))
+            data.append((_id,start_period,start_date2, start2, end2,  delta_time2, rate2,ot1_rate2,ot2_rate2))  
         
         else: 
             delta_time = (end-start).total_seconds() / 3600.0
@@ -90,10 +76,9 @@ def get_data(path):
             ot1_rate = cal_base_rate(_type, start_day, start_date, start_time, end_time, rate_data)[1]
             ot2_rate = cal_base_rate(_type, start_day, start_date, start_time, end_time, rate_data)[2]
             
-            data.append((_id,start_period,start_date,start,end, start_time, end_time,start_day, delta_time, rate,ot1_rate,ot2_rate))
+            data.append((_id,start_period,start_date,start,end,  delta_time, rate,ot1_rate,ot2_rate))
                 
                 
-    file = pd.DataFrame(data,columns=['ID',"Start Period",'Start Date','Start','End', "Start Hour", "End Hour","Day",'Hour','Rate',"Rate OT1","Rate OT2"])        
+    file = pd.DataFrame(data,columns=['ID',"Start Period",'Start Date','Start','End', 'Hour','Rate',"Rate OT1","Rate OT2"])        
 
     return file
-    
