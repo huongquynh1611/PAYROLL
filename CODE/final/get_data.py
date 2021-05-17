@@ -23,7 +23,8 @@ def get_data(time_df):
         end   = row[1]["End date"]   
         start_time = start.hour + start.minute/60
         end_time = end.hour + end.minute/60
-            
+    
+        
         _type = row[1]["Employment Type"]
         
         start_date = start.date() 
@@ -33,14 +34,8 @@ def get_data(time_df):
         
         start_day  = start.strftime('%A')
         end_day    = end.strftime('%A')  
-        if ((start_date != end_date) and ( ((end_time >=1) and (start_day in ["Friday","Saturday","Sunday"])) or ( date_to_str(start_date) in holiday_list or date_to_str(end_date) in holiday_list ) )):
+        if ((start_date != end_date) and ( ((end_time >1) and (start_day in ["Friday","Saturday","Sunday"])) or ( date_to_str(start_date) in holiday_list or date_to_str(end_date) in holiday_list ) )):
             
-            rate1 = cal_base_rate(_type, start_day, start_date, start_time, 24, rate_data)[0]
-            rate2 = cal_base_rate(_type, end_day, end_date, 0, end_time, rate_data)[0]
-            ot1_rate1 = cal_base_rate(_type, start_day, start_date, start_time, 24, rate_data)[1]
-            ot1_rate2 = cal_base_rate(_type, end_day, end_date, 0, end_time, rate_data)[1]
-            ot2_rate1 = cal_base_rate(_type, start_day, start_date, start_time, 24, rate_data)[2]
-            ot2_rate2 = cal_base_rate(_type, end_day, end_date, 0, end_time, rate_data)[2]
             
             delta_time1 = 24 - start_time   
             delta_time2 = end_time      
@@ -63,22 +58,21 @@ def get_data(time_df):
             start_day2=start2.strftime('%A')
             end_day2=end2.strftime('%A')
             
-            
-            
-            data.append((_id,start_period,start_date1,start1, end1,  delta_time1, rate1,ot1_rate1,ot2_rate1))
-            data.append((_id,start_period,start_date2, start2, end2,  delta_time2, rate2,ot1_rate2,ot2_rate2))  
+            rate1, ot1_rate1, ot2_rate1, shift1 = cal_base_rate(_type, start_day, start_date, start_time, 0, rate_data,start_date1,end_date1)
+            rate2, ot1_rate2, ot2_rate2, shift2 = cal_base_rate(_type, start_day, start_date, 0, end_time, rate_data,start_date2,end_date2)
+        
+            data.append((_id,start_period,start1, end1, start_day1, delta_time1,shift1,_type, rate1,ot1_rate1,ot2_rate1))
+            data.append((_id,start_period, start2, end2, start_day2, delta_time2, shift2,_type,rate2,ot1_rate2,ot2_rate2))  
         
         else: 
             delta_time = (end-start).total_seconds() / 3600.0
             if delta_time <3:
                 delta_time = 3
-            rate = cal_base_rate(_type, start_day, start_date, start_time, end_time, rate_data)[0]
-            ot1_rate = cal_base_rate(_type, start_day, start_date, start_time, end_time, rate_data)[1]
-            ot2_rate = cal_base_rate(_type, start_day, start_date, start_time, end_time, rate_data)[2]
-            
-            data.append((_id,start_period,start_date,start,end,  delta_time, rate,ot1_rate,ot2_rate))
                 
-                
-    file = pd.DataFrame(data,columns=['ID',"Start Period",'Start Date','Start','End', 'Hour','Rate',"Rate OT1","Rate OT2"])        
+            rate, ot1_rate, ot2_rate, shift = cal_base_rate(_type, start_day, start_date, start_time, end_time, rate_data,start_date,end_date)
+    
+            data.append((_id,start_period,start,end, start_day, delta_time,shift,_type, rate,ot1_rate,ot2_rate))
+        
+    file = pd.DataFrame(data,columns=['ID',"Start Period",'Start Date','End Date',"Day" ,'Hour','Shift',"Type",'Rate',"Rate OT1","Rate OT2"])
 
     return file

@@ -37,7 +37,7 @@ def cal_payment():
                 
 
             elif total_hour > 38:
-                payment = base_rate*(min(2,_hour)*_ot1_rate + max(0,_hour-2)*_ot2_rate)
+                payment = base_rate*(_hour*_ot2_rate)
             elif total_hour + _hour >  38:
                 ot_hour = (total_hour + _hour) - 38 
                 
@@ -59,6 +59,6 @@ def cal_payment():
             period_pay[_key_period] = (_hour,payment)
         
         shift_pay.append(payment)
-    
+        
     file["Pay"] = shift_pay
     return file
