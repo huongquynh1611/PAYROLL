@@ -12,25 +12,19 @@ holiday_list = get_holiday()
 
 def get_data(time_df):
     data= []
-    list_pay = []
     for row in time_df.iterrows():    
         _id = row[1]["Contact Name"] 
         
-        start_period = row[1]['Process period start date'].date()
-        end_period = row[1]['Process period end date'].date()
-        
+        start_period = row[1]['Process period start date'].date()   
         start = row[1]["Start date"]
         end   = row[1]["End date"]   
         start_time = start.hour + start.minute/60
         end_time = end.hour + end.minute/60
     
-        
         _type = row[1]["Employment Type"]
         
         start_date = start.date() 
         end_date   = end.date()
-        
-        delta_day = int((start_date- end_date).days)
         
         start_day  = start.strftime('%A')
         end_day    = end.strftime('%A')  
@@ -39,10 +33,6 @@ def get_data(time_df):
             
             delta_time1 = 24 - start_time   
             delta_time2 = end_time      
-            if delta_time1 <3 :
-                delta_time1=3
-            if delta_time2<3:
-                delta_time2=3
             start_date1 = start_date   
             end_date1= end_date
             start_date2 = end_date
@@ -66,8 +56,7 @@ def get_data(time_df):
         
         else: 
             delta_time = (end-start).total_seconds() / 3600.0
-            if delta_time <3:
-                delta_time = 3
+
                 
             rate, ot1_rate, ot2_rate, shift = cal_base_rate(_type, start_day, start_date, start_time, end_time, rate_data,start_date,end_date)
     
