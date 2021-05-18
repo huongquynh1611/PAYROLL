@@ -7,6 +7,6 @@ output = cal_payment()
 
 
 result = output.sort_values(['ID','Start Period']).set_index(["ID",'Start Period','Start Date']).drop(["Rate",'Rate OT1','Rate OT2'],1)
-print(result)
+
 result = result.to_excel("report_1805.xlsx", index = True)
 print("Time elapsed: ", time.time() -  _time)

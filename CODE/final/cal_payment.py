@@ -45,7 +45,7 @@ def cal_payment():
                 payment = cal_pay(_hour,_type, _rate, _ot1_rate, _ot2_rate)
                 
 
-            elif total_hour > 38:
+            elif total_hour >= 40:
                 payment = base_rate*(max(_hour,3)*_ot2_rate)
             elif total_hour + min(_hour,maxot_1) >  38:
                 ot_hour = (total_hour + _hour) - 38 
