@@ -10,6 +10,7 @@ def get_maxot1(_type):
     elif _type == "Full Time" or _type == "Part Time":
         maxot_1 = 8
     return maxot_1
+
 def cal_pay(_hour,_type, _rate, _ot1_rate, _ot2_rate):
     if _hour <3:
         _hour = 3 
@@ -43,11 +44,16 @@ def cal_payment():
 
             if total_hour + min(_hour,maxot_1) <= 38:
                 payment = cal_pay(_hour,_type, _rate, _ot1_rate, _ot2_rate)
-                
-
-            elif total_hour >= 40:
+            elif total_hour >= 40 :
                 payment = base_rate*(max(_hour,3)*_ot2_rate)
-            elif total_hour + min(_hour,maxot_1) >  38:
+            elif total_hour >=38 and total_hour + _hour <40:
+                payment = base_rate*(3*_ot1_rate)
+
+            elif total_hour >=38 and total_hour + _hour >=40: 
+                payment = base_rate*((40-total_hour)*_ot1_rate + (max(_hour,3)+total_hour-40)*_ot2_rate)
+            
+
+            elif total_hour + min(_hour,maxot_1)  >  38 and total_hour < 38:
                 ot_hour = (total_hour + _hour) - 38 
         
                 base_hour = 38 - total_hour 
