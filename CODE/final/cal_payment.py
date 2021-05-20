@@ -5,9 +5,9 @@ from data_input import get_excel, get_base_rate
 from prepare import date_to_str
 base_rate = get_base_rate()
 def get_maxot1(_type):
-    if _type == "Casual":
+    if _type == "casual":
         maxot_1 = 10
-    elif _type == "Full Time" or _type == "Part Time":
+    elif _type == "fulltime" or _type == "parttime":
         maxot_1 = 8
     return maxot_1
 
