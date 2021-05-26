@@ -1,5 +1,4 @@
 
-
 from get_data import get_data
 from data_input import get_excel, get_base_rate
 from prepare import date_to_str

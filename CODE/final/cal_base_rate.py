@@ -2,11 +2,8 @@
 from prepare import date_to_str,day_val
 from data_input import get_holiday, get_holiday_rate, get_rate_data
 
-
 holiday_list = get_holiday()
 holiday_rate = get_holiday_rate()
-
-
 rate_data = get_rate_data()
 def cal_base_rate(_type, day, start_time, end_time, rate_data,start_date,end_date):
     shift = 2      
