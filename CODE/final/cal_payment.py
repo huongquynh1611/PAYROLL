@@ -31,7 +31,7 @@ def cal_payment():
         _parent = row[1]["Parent ID"]
         _id          = row[1]["ID"]
         _key_parent = _id + " " + str(_parent)
-        _hour = row[1]["Hour"]  
+        _hour = row[1]["Quantity"]  
         if _key_parent in hour_day_list:
             hour_day_list[_key_parent] += _hour
         else:
@@ -41,10 +41,10 @@ def cal_payment():
         _id          = row[1]["ID"]
         _period      = row[1]["Start Period"] 
         _key_period  = _id + " " + str(_period)
-        _hour = row[1]["Hour"]   
-        _rate = row[1]["Rate"][0]
-        _ot1_rate = row[1]["Rate"][1]
-        _ot2_rate = row[1]["Rate"][2]
+        _hour = row[1]["Quantity"]   
+        _rate = row[1]["Factor"]
+        _ot1_rate = row[1]["Rate OT1"]
+        _ot2_rate = row[1]["Rate OT2"]
         _type = row[1]["Type"]
         _parent = row[1]["Parent ID"]
         _object_id = row[1]["Object ID"]
@@ -126,6 +126,7 @@ def cal_payment():
         period_hour[_key_period] = total_hour_period 
     
         shift_pay.append(payment)
-        
-    file["Pay"] = shift_pay
-    return file
+    file['Rate'] = [base_rate]*len(file['Quantity'])    
+    file["Amount"] = shift_pay
+    
+    return file.drop(['Rate OT1', 'Rate OT2',"Parent ID","Object ID"], axis='columns')
