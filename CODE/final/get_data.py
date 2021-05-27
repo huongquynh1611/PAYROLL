@@ -30,18 +30,12 @@ def get_data(time_df):
             _type=re.sub(r"[^a-zA-Z0-9]+",'',k).replace("temporary","")
             
         start_date = start.date() 
-        end_date   = end.date()
-        
+        end_date   = end.date()     
         start_day  = start.strftime('%A')
-        end_day    = end.strftime('%A')  
             
         if ((start_date != end_date) and ( ((end_time >1) and (start_day in ["Friday","Saturday","Sunday"]))  or ( date_to_str(start_date) in holiday_list or date_to_str(end_date) in holiday_list ) )):     
             delta_time1 = 24 - start_time 
             delta_time2 = end_time      
-            start_date1 = start_date   
-            end_date1= end_date
-            start_date2 = end_date
-            end_date2= end_date
         
             start1= start
             end2=end
@@ -77,7 +71,7 @@ def get_data(time_df):
     
     file['Start Time'] = [i.hour + i.minute/60 for i in file['Start Date']]
     file['End Time'] = [i.hour + i.minute/60 for i in file['End Date']] 
-    last_file = pd.DataFrame(last_data,columns=["ID",'Start Period','End Period','Parent ID','Object ID','Shift Start','Shift End','Day','Type','Quantity'])
+    last_file = pd.DataFrame(last_data,columns=["Employee",'Start Period','End Period','Parent ID','Object ID','Shift Start','Shift End','Day','Type','Quantity'])
     last_file['Factor'] = [cal_base_rate(file['Type'][i],file['Day'][i],file['Start Time'][i],file['End Time'][i], rate_data,file['Start Date'][i].date(),file['End Date'][i].date())[0] for i in range(len(file['Day']))]
     last_file['Rate OT1'] = [cal_base_rate(file['Type'][i],file['Day'][i],file['Start Time'][i],file['End Time'][i], rate_data,file['Start Date'][i].date(),file['End Date'][i].date())[1] for i in range(len(file['Day']))]
     last_file['Rate OT2'] = [cal_base_rate(file['Type'][i],file['Day'][i],file['Start Time'][i],file['End Time'][i], rate_data,file['Start Date'][i].date(),file['End Date'][i].date())[2] for i in range(len(file['Day']))]
@@ -87,5 +81,5 @@ def get_data(time_df):
     last_file['Start Date'] = file['Start Date']
     last_file['End Date'] = file['End Date']
     
-    table = pd.DataFrame(last_file).sort_values(["ID",'Start Period','Start Date']).drop(['Shift', 'shift','Day'], axis='columns')
+    table = pd.DataFrame(last_file).sort_values(["Employee",'Start Period','Start Date']).drop(['Shift', 'shift','Day'], axis='columns')
     return table      

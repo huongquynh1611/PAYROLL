@@ -29,7 +29,7 @@ def cal_payment():
     
     for row in file.iterrows():
         _parent = row[1]["Parent ID"]
-        _id          = row[1]["ID"]
+        _id          = row[1]["Employee"]
         _key_parent = _id + " " + str(_parent)
         _hour = row[1]["Quantity"]  
         if _key_parent in hour_day_list:
@@ -38,7 +38,7 @@ def cal_payment():
             hour_day_list[_key_parent]= _hour
         
     for row in file.iterrows():
-        _id          = row[1]["ID"]
+        _id          = row[1]["Employee"]
         _period      = row[1]["Start Period"] 
         _key_period  = _id + " " + str(_period)
         _hour = row[1]["Quantity"]   
