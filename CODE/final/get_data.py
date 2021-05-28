@@ -1,26 +1,25 @@
 from cal_base_rate import cal_base_rate
 from prepare import date_to_str
-
 from cal_base_rate import rate_data
-from pandas import DataFrame
-from datetime import datetime
 from data_input import get_holiday
 import pandas as pd
-import numpy as np
+
 
 holiday_list = get_holiday()
 
 def get_data(time_df):
-    import re,math
+    import re
     data= []
+    last_data = []
     for row in time_df.iterrows():    
         _id = row[1]["employee_name"] 
         objecttimeid = row[1]['objecttimeid']
         parentotid = row[1]['ParentOTID']
         if type(parentotid) == float:
             parentotid = objecttimeid
-       
+        
         start_period = row[1]['PeriodStartDate'].date()   
+        end_period = row[1]['PeriodEndDate'].date()
         start = row[1]["RoundedStart"]
         end   = row[1]["RoundedEnd"]   
         start_time = start.hour + start.minute/60
@@ -31,44 +30,56 @@ def get_data(time_df):
             _type=re.sub(r"[^a-zA-Z0-9]+",'',k).replace("temporary","")
             
         start_date = start.date() 
-        end_date   = end.date()
-        
+        end_date   = end.date()     
         start_day  = start.strftime('%A')
-        end_day    = end.strftime('%A')  
-        if ((start_date != end_date) and ( ((end_time >1) and (start_day in ["Friday","Saturday","Sunday"])) or ( date_to_str(start_date) in holiday_list or date_to_str(end_date) in holiday_list ) )):
             
-            
-            delta_time1 = 24 - start_time   
+        if ((start_date != end_date) and ( ((end_time >1) and (start_day in ["Friday","Saturday","Sunday"]))  or ( date_to_str(start_date) in holiday_list or date_to_str(end_date) in holiday_list ) )):     
+            delta_time1 = 24 - start_time 
             delta_time2 = end_time      
-            start_date1 = start_date   
-            end_date1= end_date
-            start_date2 = end_date
-            end_date2= end_date
-            
+        
             start1= start
             end2=end
             end1= end.replace(hour=0,minute=0)
             start2=end1
-            
             start_day1=start1.strftime('%A')
-            end_day1=end1.strftime('%A')
+         
             start_day2=start2.strftime('%A')
-            end_day2=end2.strftime('%A')
             
-            rate1, ot1_rate1, ot2_rate1, shift1 = cal_base_rate(_type, start_day, start_date, start_time, 0, rate_data,start_date1,end_date1)
-            rate2, ot1_rate2, ot2_rate2, shift2 = cal_base_rate(_type, start_day, start_date, 0, end_time, rate_data,start_date2,end_date2)
-        
-            data.append((_id,start_period,start1, end1, start_day1,objecttimeid,parentotid, delta_time1,shift1,_type, rate1,ot1_rate1,ot2_rate1))
-            data.append((_id,start_period, start2, end2, start_day2, objecttimeid,parentotid,delta_time2, shift2,_type,rate2,ot1_rate2,ot2_rate2))  
-        
+            data.append((parentotid,start_day1, start1, end1, _type))
+            data.append((parentotid,start_day2, start2, end2,_type))  
+            last_data.append((_id,start_period,end_period,parentotid,objecttimeid, start1, end1,start_day1, _type,delta_time1))
+            last_data.append((_id,start_period,end_period,parentotid, objecttimeid,start2, end2,start_day2, _type,delta_time2))
+            
         else: 
             delta_time = (end-start).total_seconds() / 3600.0
-
-                
-            rate, ot1_rate, ot2_rate, shift = cal_base_rate(_type, start_day, start_date, start_time, end_time, rate_data,start_date,end_date)
-    
-            data.append((_id,start_period,start,end, start_day,objecttimeid,parentotid, delta_time,shift,_type, rate,ot1_rate,ot2_rate))
+         
+            data.append((parentotid,start_day,start,end,_type))
+            last_data.append((_id,start_period,end_period,parentotid, objecttimeid,start, end,start_day, _type,delta_time))
         
-    file = pd.DataFrame(data,columns=['ID',"Start Period",'Start Date','End Date',"Day" ,"Object Time ID", " Parent OT ID",'Hour','Shift',"Type",'Rate',"Rate OT1","Rate OT2"])
+    file = pd.DataFrame(data,columns=["ParentOT ID",'Day','Start Date','End Date','Type'])
+    for parrent_id in file["ParentOT ID"].unique():
+        
+        last_end_date = file[file["ParentOT ID"] == parrent_id]['End Date'].iloc[-1]
+        last_start_date = file[file["ParentOT ID"] == parrent_id]['Start Date'].iloc[0]
 
-    return file
+        if  len(file[file["ParentOT ID"] == parrent_id]["Day"].unique())>1      :
+            file.loc[file["ParentOT ID"] == parrent_id,"End Date"] = file['End Date']
+            file.loc[file["ParentOT ID"] == parrent_id,"Start Date"] = file['Start Date']
+        else:
+            file.loc[file["ParentOT ID"] == parrent_id,"End Date"] = last_end_date 
+            file.loc[file["ParentOT ID"] == parrent_id,"Start Date"] = last_start_date
+    
+    file['Start Time'] = [i.hour + i.minute/60 for i in file['Start Date']]
+    file['End Time'] = [i.hour + i.minute/60 for i in file['End Date']] 
+    last_file = pd.DataFrame(last_data,columns=["Employee",'Start Period','End Period','Parent ID','Object ID','Shift Start','Shift End','Day','Type','Quantity'])
+    last_file['Factor'] = [cal_base_rate(file['Type'][i],file['Day'][i],file['Start Time'][i],file['End Time'][i], rate_data,file['Start Date'][i].date(),file['End Date'][i].date())[0] for i in range(len(file['Day']))]
+    last_file['Rate OT1'] = [cal_base_rate(file['Type'][i],file['Day'][i],file['Start Time'][i],file['End Time'][i], rate_data,file['Start Date'][i].date(),file['End Date'][i].date())[1] for i in range(len(file['Day']))]
+    last_file['Rate OT2'] = [cal_base_rate(file['Type'][i],file['Day'][i],file['Start Time'][i],file['End Time'][i], rate_data,file['Start Date'][i].date(),file['End Date'][i].date())[2] for i in range(len(file['Day']))]
+    last_file['Shift'] = [cal_base_rate(file['Type'][i],file['Day'][i],file['Start Time'][i],file['End Time'][i], rate_data,file['Start Date'][i].date(),file['End Date'][i].date())[3] for i in range(len(file['Day']))]
+    last_file['shift'] = ['Day shift' if last_file['Shift'][i] == 0 else ('Afternoon shift' if last_file['Shift'][i] ==1 else 'Night shift' ) for i in range(len(last_file['Day']))]
+    last_file['TransactionTypeName'] = [last_file['Day'][i] if last_file['Day'][i] in ['Saturday','Sunday'] else (last_file['shift'][i]) for i in range(len(last_file['Day']))]
+    last_file['Start Date'] = file['Start Date']
+    last_file['End Date'] = file['End Date']
+    
+    table = pd.DataFrame(last_file).sort_values(["Employee",'Start Period','Start Date']).drop(['Shift', 'shift','Day'], axis='columns')
+    return table      
