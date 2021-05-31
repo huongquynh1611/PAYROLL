@@ -1,10 +1,12 @@
 import pandas as pd
 import numpy as np
-xls = pd.ExcelFile("../../Input file/Costing examples with new condition.xlsx")
+xls = pd.ExcelFile("../../Input file/Costing Examples with rates.xlsx")
 def get_excel():
-    time_df = pd.read_excel(xls, 'Time') 
+    time_df = pd.read_excel(xls, 'Timebands') 
     return time_df
-
+def get_rate_df():
+    rate_df = pd.read_excel(xls, 'Rates')
+    return rate_df
 def get_holiday():
 
     holiday_df = xls.parse("Holiday")
@@ -23,6 +25,9 @@ def get_rate_data():
     rate_data = {"fulltime": rate1, "parttime": rate2, "casual": rate3}
 
     return rate_data
-def get_base_rate():
-    base_rate = 20
+def get_base_rate(rate_df,time_df):
+    result = pd.merge(time_df, rate_df.dropna(subset=['contactid']), on = 'contactid', how='left', validate='many_to_many')
+    result = pd.merge(result, rate_df.dropna(subset=['positionid']), left_on = 'positionid_x', right_on = 'positionid', how='left')
+    null_rate = float(rate_df["amount"][rate_df['contactid'].isnull() & rate_df['positionid'].isnull()])
+    base_rate = [result['amount_x'][i]if not result['amount_x'].isnull()[i] else (result['amount_y'][i] if not result['amount_y'].isnull()[i] else null_rate) for i in range(len(result['amount_x'])) ]    
     return base_rate

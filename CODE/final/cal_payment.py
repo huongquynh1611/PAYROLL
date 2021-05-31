@@ -1,8 +1,11 @@
 
 from get_data import get_data
-from data_input import get_excel, get_base_rate
+from data_input import get_excel, get_base_rate,get_rate_df
+
 from prepare import date_to_str
-base_rate = get_base_rate()
+rate_df = get_rate_df()
+time_df = get_excel()
+
 def get_maxot1(_type):
     if _type == "casual":
         maxot_1 = 10
@@ -10,17 +13,9 @@ def get_maxot1(_type):
         maxot_1 = 8
     return maxot_1
 
-def cal_pay(_hour,_type, _rate, _ot1_rate, _ot2_rate):
-    maxot_1 = get_maxot1(_type)
-    return base_rate*(
-        min([maxot_1,_hour])*_rate + 
-        max([0,min([2,_hour - maxot_1])])*_ot1_rate + 
-        max([0,_hour - maxot_1 - 2 ])*_ot2_rate)
-
-time_df = get_excel()
-
 def cal_payment():
     file = get_data(time_df)
+    file['Amount'] = get_base_rate(rate_df,time_df)
     period_hour = {}
     parent_hour = {}
     
@@ -29,8 +24,8 @@ def cal_payment():
     
     for row in file.iterrows():
         _parent = row[1]["Parent ID"]
-        _id          = row[1]["Employee"]
-        _key_parent = _id + " " + str(_parent)
+        _id          = row[1]["ID"]
+        _key_parent = str(_id) + " " + str(_parent)
         _hour = row[1]["Quantity"]  
         if _key_parent in hour_day_list:
             hour_day_list[_key_parent] += _hour
@@ -38,9 +33,9 @@ def cal_payment():
             hour_day_list[_key_parent]= _hour
         
     for row in file.iterrows():
-        _id          = row[1]["Employee"]
+        _id          = row[1]["ID"]
         _period      = row[1]["Start Period"] 
-        _key_period  = _id + " " + str(_period)
+        _key_period  = str(_id) + " " + str(_period)
         _hour = row[1]["Quantity"]   
         _rate = row[1]["Factor"]
         _ot1_rate = row[1]["Rate OT1"]
@@ -48,8 +43,8 @@ def cal_payment():
         _type = row[1]["Type"]
         _parent = row[1]["Parent ID"]
         _object_id = row[1]["Object ID"]
-        _key_parent = _id + " " + str(_parent)
-        
+        _key_parent = str(_id) + " " + str(_parent)
+        base_rate = row[1]['Amount']
         payment = 0
         maxot_1 = get_maxot1(_type) 
         
@@ -126,7 +121,7 @@ def cal_payment():
         period_hour[_key_period] = total_hour_period 
     
         shift_pay.append(payment)
-    file['Rate'] = [base_rate]*len(file['Quantity'])    
-    file["Amount"] = shift_pay
+    
+    file["Payment"] = shift_pay
     
     return file.drop(['Rate OT1', 'Rate OT2',"Parent ID","Object ID"], axis='columns')
