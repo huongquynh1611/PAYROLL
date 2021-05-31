@@ -25,9 +25,30 @@ def get_rate_data():
     rate_data = {"fulltime": rate1, "parttime": rate2, "casual": rate3}
 
     return rate_data
-def get_base_rate(rate_df,time_df):
-    result = pd.merge(time_df, rate_df.dropna(subset=['contactid']), on = 'contactid', how='left', validate='many_to_many')
-    result = pd.merge(result, rate_df.dropna(subset=['positionid']), left_on = 'positionid_x', right_on = 'positionid', how='left')
-    null_rate = float(rate_df["amount"][rate_df['contactid'].isnull() & rate_df['positionid'].isnull()])
-    base_rate = [result['amount_x'][i]if not result['amount_x'].isnull()[i] else (result['amount_y'][i] if not result['amount_y'].isnull()[i] else null_rate) for i in range(len(result['amount_x'])) ]    
-    return base_rate
+def get_base_rate():
+    import math
+    rate_df = get_rate_df().sort_values(["contactid","positionid","effectivedate"])
+    time_df = get_excel().sort_values(["contactid","positionid"])
+    base_rates = []
+    amount_list=[]
+    for row in time_df.iterrows():
+        
+        _contactidtime = row[1]['contactid']
+        _positiontime = row[1]['positionid'] 
+        _start = row[1]['RoundedStart']
+        if type(_contactidtime)==float and type(_positiontime)==float:
+            amount = list(rate_df["amount"][rate_df["contactid"].isnull() & rate_df["positionid"].isnull() & (rate_df["effectivedate"]  <= _start)])
+            if (len(amount) == 0):
+                amount_list.append(0)
+            else:
+
+                amount_list.append(float(amount[-1]))
+        else:
+            amount = list(rate_df["amount"][((rate_df["contactid"] == _contactidtime) | (rate_df["positionid"] == _positiontime)) & (rate_df["effectivedate"]  <= _start)])
+
+            if (len(amount) == 0):
+                amount_list.append(0)
+            else:
+
+                amount_list.append(float(amount[-1]) )
+    return (amount_list)

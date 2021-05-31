@@ -2,8 +2,7 @@
 from get_data import get_data
 from data_input import get_excel, get_base_rate,get_rate_df
 
-from prepare import date_to_str
-rate_df = get_rate_df()
+
 time_df = get_excel()
 
 def get_maxot1(_type):
@@ -15,7 +14,6 @@ def get_maxot1(_type):
 
 def cal_payment():
     file = get_data(time_df)
-    file['Amount'] = get_base_rate(rate_df,time_df)
     period_hour = {}
     parent_hour = {}
     

@@ -6,10 +6,10 @@ import pandas as pd
 
 
 holiday_list = get_holiday()
-rate_df=get_rate_df()
 time_df = get_excel()
-time_df['Amount'] = get_base_rate(rate_df,time_df)
+
 def get_data(time_df):
+    time_df['Amount'] = get_base_rate()
     import re
     data= []
     last_data = []
