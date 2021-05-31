@@ -5,6 +5,6 @@ import time
 _time = time.time()
 output = cal_payment()
 
-result = output.sort_values(['ID','Start Period','Start Date'])
-result = result.to_csv("report_2605_1.xlsx", index = True)
+result = output.sort_values(['Employee','Start Period','Start Date'])
+result = result.to_excel("report_2705_1.xlsx")
 print("Time elapsed: ", time.time() -  _time)

@@ -77,7 +77,7 @@ def get_data(time_df):
     last_file['Rate OT2'] = [cal_base_rate(file['Type'][i],file['Day'][i],file['Start Time'][i],file['End Time'][i], rate_data,file['Start Date'][i].date(),file['End Date'][i].date())[2] for i in range(len(file['Day']))]
     last_file['Shift'] = [cal_base_rate(file['Type'][i],file['Day'][i],file['Start Time'][i],file['End Time'][i], rate_data,file['Start Date'][i].date(),file['End Date'][i].date())[3] for i in range(len(file['Day']))]
     last_file['shift'] = ['Day shift' if last_file['Shift'][i] == 0 else ('Afternoon shift' if last_file['Shift'][i] ==1 else 'Night shift' ) for i in range(len(last_file['Day']))]
-    last_file['TransactionTypeName'] = [last_file['Day'][i] if last_file['Day'][i] in ['Saturday','Sunday'] else (last_file['shift'][i]) for i in range(len(last_file['Day']))]
+    last_file['TransactionTypeName'] = ['Holiday shift' if last_file['Factor'][i]==2.5 else   ( last_file['Day'][i] if last_file['Day'][i] in ['Saturday','Sunday'] else (last_file['shift'][i])) for i in range(len(last_file['Day']))]
     last_file['Start Date'] = file['Start Date']
     last_file['End Date'] = file['End Date']
     
