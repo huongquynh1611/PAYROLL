@@ -1,7 +1,7 @@
 from cal_base_rate import cal_base_rate
 from prepare import date_to_str
 from cal_base_rate import rate_data
-from data_input import get_holiday,get_excel,get_base_rate,get_rate_df
+from data_input import get_holiday,get_excel,get_base_rate
 import pandas as pd
 
 
@@ -13,12 +13,13 @@ def get_data(time_df):
     import re
     data= []
     last_data = []
-    for row in time_df.iterrows():    
-#         _id = row[1]["employee_name"] 
+    for row in time_df.iterrows():     
         _rate = row[1]['Amount']
         _id = row[1]['contactid']
+        positionid = row[1]['positionid']
         objecttimeid = row[1]['objecttimeid']
         parentotid = row[1]['ParentOTID']
+        
         if type(parentotid) == float:
             parentotid = objecttimeid
         
@@ -52,14 +53,14 @@ def get_data(time_df):
             
             data.append((parentotid,start_day1, start1, end1, _type))
             data.append((parentotid,start_day2, start2, end2,_type))  
-            last_data.append((_id,start_period,end_period,parentotid,objecttimeid, start1, end1,start_day1, _type,delta_time1,_rate))
-            last_data.append((_id,start_period,end_period,parentotid, objecttimeid,start2, end2,start_day2, _type,delta_time2,_rate))
+            last_data.append((positionid,_id,start_period,end_period,parentotid,objecttimeid, start1, end1,start_day1, _type,delta_time1,_rate))
+            last_data.append((positionid,_id,start_period,end_period,parentotid, objecttimeid,start2, end2,start_day2, _type,delta_time2,_rate))
             
         else: 
             delta_time = (end-start).total_seconds() / 3600.0
          
             data.append((parentotid,start_day,start,end,_type))
-            last_data.append((_id,start_period,end_period,parentotid, objecttimeid,start, end,start_day, _type,delta_time,_rate))
+            last_data.append((positionid,_id,start_period,end_period,parentotid, objecttimeid,start, end,start_day, _type,delta_time,_rate))
         
     file = pd.DataFrame(data,columns=["ParentOT ID",'Day','Start Date','End Date','Type'])
     for parrent_id in file["ParentOT ID"].unique():
@@ -76,7 +77,7 @@ def get_data(time_df):
             
     file['Start Time'] = [i.hour + i.minute/60 for i in file['Start Date']]
     file['End Time'] = [i.hour + i.minute/60 for i in file['End Date']] 
-    last_file = pd.DataFrame(last_data,columns=["ID",'Start Period','End Period','Parent ID','Object ID','Shift Start','Shift End','Day','Type','Quantity','Amount'])
+    last_file = pd.DataFrame(last_data,columns=['PositionID',"ContactID",'Start Period','End Period','Parent ID','Object ID','Shift Start','Shift End','Day','Type','Quantity','Amount'])
     last_file['Factor'] = [cal_base_rate(file['Type'][i],file['Day'][i],file['Start Time'][i],file['End Time'][i], rate_data,file['Start Date'][i].date(),file['End Date'][i].date())[0] for i in range(len(file['Day']))]
     last_file['Rate OT1'] = [cal_base_rate(file['Type'][i],file['Day'][i],file['Start Time'][i],file['End Time'][i], rate_data,file['Start Date'][i].date(),file['End Date'][i].date())[1] for i in range(len(file['Day']))]
     last_file['Rate OT2'] = [cal_base_rate(file['Type'][i],file['Day'][i],file['Start Time'][i],file['End Time'][i], rate_data,file['Start Date'][i].date(),file['End Date'][i].date())[2] for i in range(len(file['Day']))]
@@ -85,6 +86,4 @@ def get_data(time_df):
     last_file['TransactionTypeName'] = ['Holiday shift' if last_file['Factor'][i]==2.5 else   ( last_file['Day'][i] if last_file['Day'][i] in ['Saturday','Sunday'] else (last_file['shift'][i])) for i in range(len(last_file['Day']))]
     last_file['Start Date'] = file['Start Date']
     last_file['End Date'] = file['End Date']
-    
-    table = pd.DataFrame(last_file).sort_values(["ID",'Start Period','Start Date']).drop(['Shift', 'shift','Day'], axis='columns')
-    return table      
+    return last_file.drop(['Shift', 'shift','Day'], axis='columns')      

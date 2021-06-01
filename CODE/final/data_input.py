@@ -2,10 +2,10 @@ import pandas as pd
 import numpy as np
 xls = pd.ExcelFile("../../Input file/Costing Examples with rates.xlsx")
 def get_excel():
-    time_df = pd.read_excel(xls, 'Timebands') 
+    time_df = pd.read_excel(xls, 'Timebands').sort_values(["positionid","contactid"]) 
     return time_df
 def get_rate_df():
-    rate_df = pd.read_excel(xls, 'Rates')
+    rate_df = pd.read_excel(xls, 'Rates').sort_values(["positionid","contactid","effectivedate"])
     return rate_df
 def get_holiday():
 
@@ -26,29 +26,66 @@ def get_rate_data():
 
     return rate_data
 def get_base_rate():
-    import math
-    rate_df = get_rate_df().sort_values(["contactid","positionid","effectivedate"])
-    time_df = get_excel().sort_values(["contactid","positionid"])
-    base_rates = []
+    rate_df = get_rate_df()
+    time_df = get_excel()
+
+    check_null = rate_df["contactid"].isnull() & rate_df["positionid"].isnull()
+
     amount_list=[]
-    for row in time_df.iterrows():
-        
-        _contactidtime = row[1]['contactid']
-        _positiontime = row[1]['positionid'] 
-        _start = row[1]['RoundedStart']
-        if type(_contactidtime)==float and type(_positiontime)==float:
-            amount = list(rate_df["amount"][rate_df["contactid"].isnull() & rate_df["positionid"].isnull() & (rate_df["effectivedate"]  <= _start)])
-            if (len(amount) == 0):
-                amount_list.append(0)
-            else:
-
-                amount_list.append(float(amount[-1]))
-        else:
-            amount = list(rate_df["amount"][((rate_df["contactid"] == _contactidtime) | (rate_df["positionid"] == _positiontime)) & (rate_df["effectivedate"]  <= _start)])
-
-            if (len(amount) == 0):
-                amount_list.append(0)
-            else:
-
-                amount_list.append(float(amount[-1]) )
-    return (amount_list)
+    
+    def foo(row):        
+        _contact= row['contactid']
+        _position = row['positionid'] 
+        _start = row['RoundedStart']        
+        rate = 0        
+        check_effdate = rate_df["effectivedate"] <= _start
+        get_amount = []
+        rate = 0
+        if isinstance(_position, str):
+            check_position = rate_df["positionid"] == _position
+            if len(set(check_position))==1: # position not found 
+                if isinstance(_contact, str):
+                    check_contact = rate_df["contactid"] == _contact
+                    if len(set(check_contact))==2: # contact found
+                        get_amount = list(rate_df["amount"][check_contact & check_effdate])
+                        rate = float(get_amount[-1]) if len(get_amount) > 0 else 0
+                    else:
+                        get_amount = list(rate_df["amount"][check_null & check_effdate])
+                        rate = float(get_amount[-1]) if len(get_amount) > 0 else 0
+                else: # contact is null
+                    get_amount = list(rate_df["amount"][check_null & check_effdate])                    
+                    rate = float(get_amount[-1]) if len(get_amount) > 0 else 0
+                        
+            else: # position found
+                check_contact = rate_df["contactid"] == _contact
+                if isinstance(_contact, str): # contact not null
+                    if len(set(check_contact))==2: # contact found
+                        get_amount = list(rate_df["amount"][check_position & check_contact & check_effdate])
+                        if len(get_amount) == 0: # both match but not in the same row
+                            get_amount = list(rate_df["amount"][check_position & check_effdate])
+                            rate = float(get_amount[-1]) if len(get_amount) > 0 else 0
+                        else:
+                            rate = float(get_amount[-1])
+                            
+                    else: # contact not found
+                        get_amount = list(rate_df["amount"][check_position & check_effdate])
+                        rate = float(get_amount[-1]) if len(get_amount) > 0 else 0
+                else: # contact null
+                    get_amount = list(rate_df["amount"][check_position & check_effdate])
+                    rate = float(get_amount[-1]) if len(get_amount) > 0 else 0
+        else: # position is null
+            if isinstance(_contact, str): # contact found
+                check_contact = rate_df["contactid"] == _contact
+                if len(set(check_contact))==2: # contact found
+                    get_amount = list(rate_df["amount"][check_contact & check_effdate])
+                    rate = float(get_amount[-1]) if len(get_amount) > 0 else 0
+                else:
+                    get_amount = list(rate_df["amount"][check_null & check_effdate])
+                    rate = float(get_amount[-1]) if len(get_amount) > 0 else 0
+            else: # contact is null
+                get_amount = list(rate_df["amount"][check_null & check_effdate])
+                rate = float(get_amount[-1]) if len(get_amount) > 0 else 0
+                   
+        return rate 
+    amount_list = time_df.apply(foo, axis=1)  
+    return amount_list

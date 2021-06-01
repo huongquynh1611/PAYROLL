@@ -1,6 +1,6 @@
 
 from get_data import get_data
-from data_input import get_excel, get_base_rate,get_rate_df
+from data_input import get_excel
 
 
 time_df = get_excel()
@@ -22,7 +22,7 @@ def cal_payment():
     
     for row in file.iterrows():
         _parent = row[1]["Parent ID"]
-        _id          = row[1]["ID"]
+        _id          = row[1]["ContactID"]
         _key_parent = str(_id) + " " + str(_parent)
         _hour = row[1]["Quantity"]  
         if _key_parent in hour_day_list:
@@ -31,7 +31,7 @@ def cal_payment():
             hour_day_list[_key_parent]= _hour
         
     for row in file.iterrows():
-        _id          = row[1]["ID"]
+        _id          = row[1]["ContactID"]
         _period      = row[1]["Start Period"] 
         _key_period  = str(_id) + " " + str(_period)
         _hour = row[1]["Quantity"]   
@@ -122,4 +122,4 @@ def cal_payment():
     
     file["Payment"] = shift_pay
     
-    return file.drop(['Rate OT1', 'Rate OT2',"Parent ID","Object ID"], axis='columns')
+    return file.drop(['Rate OT1', 'Rate OT2'], axis='columns')
